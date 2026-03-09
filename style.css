@@ -1,0 +1,646 @@
+/* ============================================================
+   style.css  —  Shared UI styles for both pages
+   Birthday website for a turning-3 princess
+   ============================================================ */
+
+/* ── Google Fonts ─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Rubik+Bubbles&family=Comfortaa:wght@400;700&display=swap');
+
+/* ── CSS Variables ────────────────────────────────────────── */
+:root {
+  --pink:        #FF69B4;
+  --deep-pink:   #FF1493;
+  --purple:      #9370DB;
+  --dark-purple: #2D1B69;
+  --gold:        #FFD700;
+  --lavender:    #E6D5FF;
+  --sky:         #87CEEB;
+  --mint:        #98FF98;
+  --cream:       #FFFAF0;
+  --peach:       #FFB6D9;
+
+  --font-title:   'Fredoka One', cursive;
+  --font-display: 'Rubik Bubbles', cursive;
+  --font-body:    'Comfortaa', sans-serif;
+
+  --shadow-glow-pink: 0 0 20px rgba(255,105,180,0.8), 0 0 40px rgba(255,105,180,0.4);
+  --shadow-glow-gold: 0 0 20px rgba(255,215,0,0.8),  0 0 40px rgba(255,215,0,0.4);
+}
+
+/* ── Reset & Base ─────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #1a0a2e;
+  font-family: var(--font-body);
+  color: var(--cream);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Hide scrollbar everywhere */
+::-webkit-scrollbar { display: none; }
+
+/* ── Canvas (Three.js) ────────────────────────────────────── */
+#canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+}
+
+/* ── UI Overlay wrapper ───────────────────────────────────── */
+#ui,
+#gallery-ui {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;   /* canvas stays interactive by default */
+  z-index: 10;
+}
+
+/* Elements inside #ui / #gallery-ui that need clicks get pointer-events back */
+#ui button,
+#ui a,
+#ui .clickable,
+#gallery-ui button,
+#gallery-ui a {
+  pointer-events: auto;
+}
+
+/* ── D-pad centre cell ────────────────────────────────────── */
+.dpad-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ── Gallery page title ───────────────────────────────────── */
+.gallery-title {
+  position: absolute;
+  top: 3.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-title);
+  font-size: clamp(0.85rem, 2vw, 1.1rem);
+  color: var(--pink);
+  text-shadow: 0 0 10px rgba(255,105,180,0.6);
+  text-align: center;
+  max-width: min(calc(100vw - 150px), 420px);
+  pointer-events: none;
+  opacity: 0;
+  animation: fadeSlideUpCenter 0.6s ease forwards 0.3s;
+}
+
+/* ============================================================
+   MAIN PAGE STYLES  (index.html)
+   ============================================================ */
+
+/* ── Title block (center of screen) ──────────────────────── */
+.title-wrapper {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+
+  opacity: 0;
+  animation: fadeSlideUpCenterXY 1.2s ease forwards 2.5s;
+}
+
+.title-line1 {
+  font-family: var(--font-title);
+  font-size: clamp(1.8rem, 5vw, 3.5rem);
+  color: var(--lavender);
+  text-shadow: 0 0 15px rgba(230,213,255,0.9);
+  line-height: 1.1;
+}
+
+.title-line2 {
+  font-family: var(--font-display);
+  font-size: clamp(2.8rem, 8vw, 6rem);
+  color: var(--gold);
+  text-shadow:
+    0 0 10px rgba(255,215,0,1),
+    0 0 30px rgba(255,215,0,0.6),
+    0 0 60px rgba(255,105,180,0.4);
+  line-height: 1;
+  animation: pulseGlow 3s ease-in-out infinite 4s;
+}
+
+.subtitle {
+  font-family: var(--font-title);
+  font-size: clamp(1.2rem, 3vw, 2rem);
+  color: var(--pink);
+  text-shadow: 0 0 12px rgba(255,105,180,0.9);
+  margin-top: 0.3rem;
+}
+
+/* ── Bottom button row ────────────────────────────────────── */
+.btn-row {
+  position: absolute;
+  bottom: 6%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  pointer-events: auto;
+
+  opacity: 0;
+  animation: fadeSlideUpCenter 1s ease forwards 3.5s;
+}
+
+/* ── Shared button base ───────────────────────────────────── */
+.btn {
+  font-family: var(--font-title);
+  font-size: clamp(1rem, 2.5vw, 1.4rem);
+  padding: 0.75em 1.6em;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.btn:hover  { transform: scale(1.08); }
+.btn:active { transform: scale(0.95); }
+
+/* ── "Make a Wish! 🎂" button ─────────────────────────────── */
+.btn-wish {
+  background: linear-gradient(135deg, var(--deep-pink), var(--purple));
+  color: var(--cream);
+  box-shadow: 0 4px 20px rgba(255,20,147,0.5), 0 0 0 2px rgba(255,215,0,0.4);
+  animation: wishPulse 2.5s ease-in-out infinite 4s;
+}
+
+.btn-wish:hover {
+  box-shadow: 0 6px 28px rgba(255,20,147,0.8), 0 0 0 3px var(--gold);
+}
+
+/* ── "See My Pictures! 🚗" gallery button ─────────────────── */
+.btn-gallery {
+  background: linear-gradient(135deg, var(--gold), #ffaa00);
+  color: var(--dark-purple);
+  font-weight: 700;
+  box-shadow: 0 4px 20px rgba(255,215,0,0.5);
+}
+
+.btn-gallery:hover {
+  box-shadow: 0 6px 28px rgba(255,215,0,0.9);
+}
+
+/* ── Music toggle (fixed top-right) ──────────────────────── */
+.btn-music {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(147, 112, 219, 0.5);
+  border: 2px solid rgba(255,215,0,0.6);
+  color: var(--cream);
+  font-size: 1.4rem;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.15s ease, background 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 12px rgba(147,112,219,0.4);
+}
+
+.btn-music:hover  { transform: scale(1.15); background: rgba(147,112,219,0.8); }
+.btn-music:active { transform: scale(0.9); }
+.btn-music.muted  { opacity: 0.5; }
+
+/* ── Wish popup (appears after clicking Make a Wish) ──────── */
+.wish-popup {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.5);
+  background: linear-gradient(135deg, rgba(45,27,105,0.95), rgba(147,112,219,0.9));
+  border: 3px solid var(--gold);
+  border-radius: 24px;
+  padding: 2rem 2.5rem;
+  text-align: center;
+  max-width: min(90vw, 480px);
+  box-shadow: 0 8px 40px rgba(255,215,0,0.4), var(--shadow-glow-pink);
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  z-index: 20;
+}
+
+.wish-popup.visible {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.wish-popup p {
+  font-family: var(--font-title);
+  font-size: clamp(1.2rem, 3.5vw, 1.8rem);
+  color: var(--cream);
+  text-shadow: 0 0 10px rgba(255,215,0,0.6);
+  line-height: 1.4;
+}
+
+.wish-popup .btn-close {
+  margin-top: 1.2rem;
+  background: linear-gradient(135deg, var(--gold), #ffaa00);
+  color: var(--dark-purple);
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.5em 1.4em;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-title);
+  transition: transform 0.15s ease;
+}
+
+.wish-popup .btn-close:hover  { transform: scale(1.1); }
+.wish-popup .btn-close:active { transform: scale(0.95); }
+
+/* ── Intro loading screen ─────────────────────────────────── */
+#intro-screen {
+  position: fixed;
+  inset: 0;
+  background: #1a0a2e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  transition: opacity 0.8s ease;
+}
+
+#intro-screen.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.intro-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 7vw, 5rem);
+  color: var(--gold);
+  text-shadow: var(--shadow-glow-gold);
+  text-align: center;
+  margin-bottom: 2rem;
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.intro-hint {
+  font-family: var(--font-body);
+  font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+  color: var(--lavender);
+  margin-bottom: 2.5rem;
+}
+
+.btn-start {
+  background: linear-gradient(135deg, var(--pink), var(--deep-pink));
+  color: var(--cream);
+  font-family: var(--font-title);
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  padding: 0.8em 2em;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255,105,180,0.6);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  pointer-events: auto;
+}
+
+.btn-start:hover  { transform: scale(1.08); box-shadow: 0 6px 30px rgba(255,105,180,0.9); }
+.btn-start:active { transform: scale(0.96); }
+
+/* ============================================================
+   GALLERY PAGE STYLES  (gallery.html)
+   ============================================================ */
+
+/* ── Back button (top-left) ───────────────────────────────── */
+.btn-back {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: rgba(45,27,105,0.75);
+  border: 2px solid rgba(255,215,0,0.5);
+  color: var(--cream);
+  font-family: var(--font-title);
+  font-size: clamp(0.85rem, 2vw, 1.1rem);
+  padding: 0.5em 1.2em;
+  border-radius: 50px;
+  cursor: pointer;
+  pointer-events: auto;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 12px rgba(45,27,105,0.4);
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.btn-back:hover  { transform: scale(1.07); background: rgba(45,27,105,0.95); }
+.btn-back:active { transform: scale(0.95); }
+
+
+/* ── Gallery title hint (top, below counter) ─────────────── */
+.gallery-hint {
+  position: absolute;
+  top: 4.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-body);
+  font-size: clamp(0.75rem, 1.8vw, 0.95rem);
+  color: rgba(230,213,255,0.8);
+  text-align: center;
+  max-width: min(80vw, 480px);
+  line-height: 1.4;
+  pointer-events: none;
+  animation: fadeSlideUpCenter 0.8s ease forwards 0.5s;
+  opacity: 0;
+}
+
+/* ============================================================
+   D-PAD CONTROLS  (gallery page — always visible)
+   ============================================================ */
+
+.dpad {
+  position: fixed;
+  bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 0.5rem));
+  right: max(1.5rem, calc(env(safe-area-inset-right) + 0.5rem));
+  display: grid;
+  grid-template-columns: repeat(3, 60px);
+  grid-template-rows: repeat(3, 60px);
+  gap: 6px;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+/* Place each button in the correct grid cell */
+.dpad-up    { grid-column: 2; grid-row: 1; }
+.dpad-left  { grid-column: 1; grid-row: 2; }
+.dpad-right { grid-column: 3; grid-row: 2; }
+.dpad-down  { grid-column: 2; grid-row: 3; }
+
+.dpad-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  background: rgba(255, 105, 180, 0.55);
+  border: 2px solid rgba(255, 215, 0, 0.7);
+  color: var(--cream);
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.1s ease, box-shadow 0.1s ease;
+  box-shadow: 0 4px 15px rgba(255,105,180,0.35);
+  backdrop-filter: blur(6px);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  user-select: none;
+}
+
+.dpad-btn:hover {
+  background: rgba(255, 105, 180, 0.75);
+  box-shadow: 0 4px 20px rgba(255,105,180,0.6);
+}
+
+.dpad-btn:active,
+.dpad-btn.pressed {
+  background: rgba(255, 20, 147, 0.9);
+  transform: scale(0.9);
+  box-shadow: 0 2px 8px rgba(255,105,180,0.8);
+  border-color: var(--gold);
+}
+
+/* ── Gallery music toggle ─────────────────────────────────── */
+.btn-music-gallery {
+  position: fixed;
+  bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 0.5rem));
+  left: max(1.5rem, calc(env(safe-area-inset-left) + 0.5rem));
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(147,112,219,0.5);
+  border: 2px solid rgba(255,215,0,0.6);
+  color: var(--cream);
+  font-size: 1.4rem;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.15s ease, background 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 12px rgba(147,112,219,0.4);
+  z-index: 20;
+}
+
+.btn-music-gallery:hover  { transform: scale(1.15); background: rgba(147,112,219,0.8); }
+.btn-music-gallery:active { transform: scale(0.9); }
+.btn-music-gallery.muted  { opacity: 0.5; }
+
+/* ── "All photos found!" celebration overlay ─────────────── */
+.all-found {
+  position: fixed;
+  inset: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(45,27,105,0.88);
+  backdrop-filter: blur(8px);
+  z-index: 50;
+  display: none;           /* hidden by default */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.all-found.visible {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.all-found h2 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 4rem);
+  color: var(--gold);
+  text-shadow: var(--shadow-glow-gold);
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.all-found p {
+  font-family: var(--font-title);
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  color: var(--lavender);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.btn-back-party {
+  background: linear-gradient(135deg, var(--pink), var(--deep-pink));
+  color: var(--cream);
+  font-family: var(--font-title);
+  font-size: clamp(1rem, 2.5vw, 1.4rem);
+  padding: 0.7em 2em;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255,105,180,0.6);
+  transition: transform 0.15s ease;
+}
+
+.btn-back-party:hover  { transform: scale(1.08); }
+.btn-back-party:active { transform: scale(0.95); }
+
+/* ============================================================
+   KEYFRAME ANIMATIONS
+   ============================================================ */
+
+/* Used for non-centered elements */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Used for elements centered with left:50% + translateX(-50%) */
+@keyframes fadeSlideUpCenter {
+  from { opacity: 0; transform: translateX(-50%) translateY(30px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Used for .title-wrapper which uses translate(-50%, -50%) */
+@keyframes fadeSlideUpCenterXY {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 30px)); }
+  to   { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { text-shadow: 0 0 10px rgba(255,215,0,1), 0 0 30px rgba(255,215,0,0.6), 0 0 60px rgba(255,105,180,0.3); }
+  50%       { text-shadow: 0 0 20px rgba(255,215,0,1), 0 0 50px rgba(255,215,0,0.8), 0 0 90px rgba(255,105,180,0.6); }
+}
+
+@keyframes wishPulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(255,20,147,0.5), 0 0 0 2px rgba(255,215,0,0.4); }
+  50%       { box-shadow: 0 4px 30px rgba(255,20,147,0.8), 0 0 0 3px rgba(255,215,0,0.8); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-12px); }
+}
+
+@keyframes shimmer {
+  0%   { opacity: 0.6; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+/* ============================================================
+   RESPONSIVE — Mobile adjustments
+   ============================================================ */
+
+@media (max-width: 480px) {
+  .dpad {
+    grid-template-columns: repeat(3, 56px);
+    grid-template-rows: repeat(3, 56px);
+    bottom: 1rem;
+    right: 1rem;
+    gap: 5px;
+  }
+
+  .dpad-btn {
+    width: 56px;
+    height: 56px;
+    font-size: 1.4rem;
+    border-radius: 12px;
+  }
+
+  .btn-music,
+  .btn-music-gallery {
+    width: 46px;
+    height: 46px;
+    font-size: 1.2rem;
+  }
+
+  .btn-back {
+    font-size: 0.8rem;
+    padding: 0.45em 1em;
+  }
+}
+
+@media (max-width: 360px) {
+  .dpad {
+    grid-template-columns: repeat(3, 50px);
+    grid-template-rows: repeat(3, 50px);
+  }
+
+  .dpad-btn {
+    width: 50px;
+    height: 50px;
+    font-size: 1.3rem;
+  }
+}
+
+/* ── Landscape on short screens (phones rotated) ──────────── */
+@media (max-height: 500px) {
+  .dpad {
+    grid-template-columns: repeat(3, 44px);
+    grid-template-rows: repeat(3, 44px);
+    gap: 3px;
+    bottom: max(0.4rem, calc(env(safe-area-inset-bottom) + 0.2rem));
+    right: max(0.4rem, calc(env(safe-area-inset-right) + 0.2rem));
+  }
+
+  .dpad-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 1.2rem;
+    border-radius: 10px;
+  }
+
+  .btn-music-gallery,
+  .btn-music {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+  }
+
+  /* Compact top bar in landscape */
+  .btn-back {
+    top: 0.5rem;
+    font-size: 0.8rem;
+    padding: 0.35em 0.9em;
+  }
+
+  .gallery-title { top: 2.8rem; }
+  .gallery-hint  { display: none; }
+
+  /* Main page: tighter layout */
+  .title-wrapper { top: 32%; }
+  .btn-row { bottom: 3%; }
+}

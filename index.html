@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#2D1B69">
+  <title>Happy Birthday! 🎂</title>
+
+  <!-- Emoji favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎂</text></svg>">
+
+  <!-- Shared styles -->
+  <link rel="stylesheet" href="style.css">
+
+  <!--
+    ═══════════════════════════════════════════════════════
+    Three.js importmap — MUST come before any module script
+    ═══════════════════════════════════════════════════════
+    NOTE: Open this site with VS Code Live Server (or any
+    HTTP server). ES modules don't work from file:// paths.
+    Install "Live Server" extension → right-click index.html
+    → "Open with Live Server"
+  -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three":          "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js",
+      "three/addons/":  "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <!-- GSAP — loaded as global (window.gsap) before module scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+
+  <!-- Howler.js audio — loaded as global (window.Howl, window.Howler) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+</head>
+
+<body>
+
+  <!-- ── Three.js canvas (full screen, behind everything) ── -->
+  <canvas id="canvas"></canvas>
+
+  <!-- ══════════════════════════════════════════════════════
+       INTRO SCREEN
+       Shown first. Handles browser audio autoplay policy —
+       music only starts after the user taps/clicks.
+  ═══════════════════════════════════════════════════════ -->
+  <div id="intro-screen">
+    <p class="intro-title">🎂 🌟 🎈</p>
+    <p class="intro-hint">Tap to begin the magic! 🎵</p>
+    <button class="btn-start" id="btn-start">Let's Celebrate! ✨</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       MAIN UI OVERLAY
+       Hidden until user taps "Let's Celebrate!".
+       All text is injected by main.js from lib/content.js.
+  ═══════════════════════════════════════════════════════ -->
+  <div id="ui" style="display:none;">
+
+    <!-- Music toggle — top-right corner -->
+    <button class="btn-music" id="btn-music" title="Toggle music" aria-label="Toggle music">
+      🎵
+    </button>
+
+    <!-- ── Birthday title — centre of screen ── -->
+    <div class="title-wrapper">
+      <p class="title-line1" id="title-line1"><!-- set by main.js --></p>
+      <p class="title-line2" id="title-line2"><!-- set by main.js --></p>
+      <p class="subtitle"    id="subtitle"><!-- set by main.js --></p>
+    </div>
+
+    <!-- ── Action buttons — bottom centre ── -->
+    <div class="btn-row">
+      <button class="btn btn-wish"    id="btn-wish"><!-- set by main.js --></button>
+      <button class="btn btn-gallery" id="btn-gallery"><!-- set by main.js --></button>
+    </div>
+
+    <!-- ── Wish popup — appears after "Make a Wish!" click ── -->
+    <div class="wish-popup" id="wish-popup" role="dialog" aria-modal="true">
+      <p id="wish-text"><!-- set by main.js --></p>
+      <button class="btn-close" id="btn-close-wish">Close 💖</button>
+    </div>
+
+  </div><!-- /#ui -->
+
+  <!-- ══════════════════════════════════════════════════════
+       App entry point (ES module — imports Three.js + libs)
+  ═══════════════════════════════════════════════════════ -->
+  <script type="module" src="js/main.js"></script>
+
+</body>
+</html>

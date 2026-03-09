@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#2D1B69">
+  <title>Photo Road 🚗✨</title>
+
+  <!-- Emoji favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚗</text></svg>">
+
+  <!-- Shared styles -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- importmap — same as index.html -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three":         "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <!-- GSAP global -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+
+  <!-- Howler.js global -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+</head>
+
+<body>
+
+  <!-- Three.js canvas — full screen, behind everything -->
+  <canvas id="canvas"></canvas>
+
+  <!-- ══════════════════════════════════════════════════════
+       GALLERY UI OVERLAY
+  ═══════════════════════════════════════════════════════ -->
+  <div id="gallery-ui">
+
+    <!-- Back button — top left -->
+    <a href="index.html" class="btn-back" id="btn-back">← Back to Party 🎂</a>
+
+    <!-- Title — top centre -->
+    <p class="gallery-title" id="gallery-title"><!-- set by gallery.js --></p>
+
+    <!-- Hint — below title -->
+    <p class="gallery-hint" id="gallery-hint"><!-- set by gallery.js --></p>
+
+    <!-- ── D-PAD CONTROLS — bottom centre ─────────────────
+         Always visible on both mobile and desktop.
+         Layout uses CSS grid 3×3.
+    ───────────────────────────────────────────────────── -->
+    <div class="dpad" id="dpad" aria-label="Drive controls">
+      <!-- Row 1: [empty] [up] [empty] -->
+      <div class="dpad-cell"></div>
+      <button class="dpad-btn" id="dpad-up"    aria-label="Forward">▲</button>
+      <div class="dpad-cell"></div>
+      <!-- Row 2: [left] [empty/center dot] [right] -->
+      <button class="dpad-btn" id="dpad-left"  aria-label="Left">◀</button>
+      <div class="dpad-cell dpad-center">🚗</div>
+      <button class="dpad-btn" id="dpad-right" aria-label="Right">▶</button>
+      <!-- Row 3: [empty] [down] [empty] -->
+      <div class="dpad-cell"></div>
+      <button class="dpad-btn" id="dpad-down"  aria-label="Reverse">▼</button>
+      <div class="dpad-cell"></div>
+    </div>
+
+    <!-- Music toggle -->
+    <button class="btn-music" id="btn-music" title="Toggle music" aria-label="Toggle music">
+      🎵
+    </button>
+
+    <!-- All photos found overlay -->
+    <div class="all-found" id="all-found">
+      <p>🎉 You found all the pictures! 🎉</p>
+      <button class="btn btn-wish" id="btn-play-again">Drive Again! 🚗</button>
+      <a href="index.html" class="btn btn-gallery" style="text-decoration:none;">Back to Party 🎂</a>
+    </div>
+
+  </div><!-- /#gallery-ui -->
+
+  <!-- Gallery entry point -->
+  <script type="module" src="js/gallery.js"></script>
+
+</body>
+</html>
