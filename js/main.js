@@ -108,26 +108,20 @@ function _boot() {
 }
 
 // ── Intro cake animation ───────────────────────────────────────
+// CSS sets opacity:0 on each title child; GSAP reveals them.
 function _playCakeIntro() {
-  if (!window.gsap) return;
+  if (!window.gsap) {
+    // Fallback: show everything immediately
+    ['.title-line1','.title-line2','.subtitle','.btn-row'].forEach(s => {
+      document.querySelectorAll(s).forEach(el => { el.style.opacity = 1; });
+    });
+    return;
+  }
 
-  // Animate title text in
-  gsap.fromTo('.title-line1',
-    { y: -40, opacity: 0 },
-    { y: 0, opacity: 1, duration: 0.9, ease: 'back.out(1.4)', delay: 0.3 }
-  );
-  gsap.fromTo('.title-line2',
-    { y: -30, opacity: 0 },
-    { y: 0, opacity: 1, duration: 0.9, ease: 'back.out(1.4)', delay: 0.55 }
-  );
-  gsap.fromTo('.subtitle',
-    { y: -20, opacity: 0 },
-    { y: 0, opacity: 1, duration: 0.7, ease: 'power2.out', delay: 0.8 }
-  );
-  gsap.fromTo('.btn-row',
-    { y: 30, opacity: 0 },
-    { y: 0, opacity: 1, duration: 0.7, ease: 'back.out(1.4)', delay: 1.0 }
-  );
+  gsap.fromTo('.title-line1', { y: 22, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, ease: 'back.out(1.4)', delay: 0.2 });
+  gsap.fromTo('.title-line2', { y: 22, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, ease: 'back.out(1.4)', delay: 0.45 });
+  gsap.fromTo('.subtitle',    { y: 15, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: 'power2.out',    delay: 0.7 });
+  gsap.fromTo('.btn-row',     { y: 22, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: 'back.out(1.4)', delay: 0.9 });
 }
 
 // ── 4. Render loop ─────────────────────────────────────────────

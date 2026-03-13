@@ -81,6 +81,18 @@
 
   </div><!-- /#gallery-ui -->
 
+  <!-- ── Photo modal ────────────────────────────────────────── -->
+  <div id="photo-modal" class="photo-modal">
+    <div class="photo-modal-backdrop" id="modal-backdrop"></div>
+    <div class="photo-modal-content">
+      <button class="photo-modal-close" id="modal-close" aria-label="Close">✕</button>
+      <button class="photo-modal-nav photo-modal-prev" id="modal-prev" aria-label="Previous">❮</button>
+      <img id="modal-img" src="" alt="Photo" draggable="false">
+      <button class="photo-modal-nav photo-modal-next" id="modal-next" aria-label="Next">❯</button>
+      <div class="photo-modal-counter" id="modal-counter">1 / 1</div>
+    </div>
+  </div>
+
   <!-- Gallery entry point -->
   <script type="module" src="js/gallery.js"></script>
 

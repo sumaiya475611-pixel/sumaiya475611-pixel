@@ -295,17 +295,27 @@ function _buildBalloons() {
     const strMesh = new THREE.Mesh(strGeo, strMat);
     group.add(strMesh);
 
-    // Position balloons in a spread ring around the cake
-    const angle  = (i / count) * Math.PI * 2;
-    const radius = 3.5 + Math.sin(i * 1.3) * 0.8;
+    // Position balloons in left / right arcs — keep cake front clear
+    const halfCount = Math.floor(count / 2);
+    const isRight   = i < halfCount;
+    const halfIdx   = isRight ? i : i - halfCount;
+    const arcFrac   = halfCount > 1 ? halfIdx / (halfCount - 1) : 0.5;
+    const angle     = isRight
+      ? (-0.7 + arcFrac * 1.4)             // right arc: −40° … +40°
+      : (Math.PI - 0.7 + arcFrac * 1.4);  // left  arc: 140° … 220°
+    const radius = 4.2 + Math.sin(i * 1.3) * 0.8;
     const yBase  = 2.5 + Math.cos(i * 0.9) * 1.5;
 
     group.position.set(
       Math.cos(angle) * radius,
       yBase,
-      Math.sin(angle) * radius * 0.6 - 0.5,
+      Math.sin(angle) * radius * 0.28 - 1.2, // small z — all behind cake centre
     );
-    group.scale.setScalar(0.85 + Math.random() * 0.3);
+    const s = 0.85 + Math.random() * 0.3;
+    group.scale.setScalar(s);
+    group.userData.origScale = s;
+    // Mark all descendants so the raycaster can detect balloon clicks
+    group.traverse(child => { child.userData.isBalloon = true; });
 
     _scene.add(group);
     _balloons.push({
@@ -367,7 +377,7 @@ function _buildCrown() {
     _crown.add(gem);
   }
 
-  _crown.position.set(0, 5.2, 0);
+  _crown.position.set(0, 4.2, 0);
   _crown.scale.setScalar(1.1);
   _scene.add(_crown);
 }
@@ -395,6 +405,7 @@ function _buildGifts() {
     const lMat = new THREE.MeshStandardMaterial({ color, roughness: 0.4 });
     const lid  = new THREE.Mesh(lGeo, lMat);
     lid.position.y = 0.61;
+    lid.userData.isGiftLid = true;   // exclude lid from raycasting group-up walk
     group.add(lid);
 
     // Ribbon stripes (two flat boxes)
@@ -422,6 +433,10 @@ function _buildGifts() {
 
     group.position.set(x, y, z);
     group.scale.setScalar(scale);
+    // Store lid for open animation; mark group for raycasting
+    group.userData.isGift    = true;
+    group.userData.lid       = lid;
+    group.userData.baseY     = y;
     _scene.add(group);
     _gifts.push({ group, speed: 0.4 + i * 0.15, phase: i * 2.1 });
   });
@@ -449,7 +464,7 @@ export function animateScene(time) {
   });
 
   // Candle flames: flicker (scale + position jitter)
-  _flames.forEach((f, i) => {
+  _flames.forEach(f => {
     const flicker = 1 + Math.sin(time * 12 + f.phase) * 0.15 + Math.cos(time * 17 + f.phase * 2) * 0.08;
     f.mesh.scale.set(flicker, flicker * 1.2, flicker);
     f.mesh.position.x = f.px + Math.sin(time * 9  + f.phase) * 0.02;
@@ -458,7 +473,7 @@ export function animateScene(time) {
 
   // Crown: slow float + gentle spin
   if (_crown) {
-    _crown.position.y = 5.2 + Math.sin(time * 0.8) * 0.18;
+    _crown.position.y = 4.2 + Math.sin(time * 0.8) * 0.18;
     _crown.rotation.y = time * 0.35;
   }
 

@@ -15,9 +15,9 @@ import { playSound }   from './audio.js';
 import { spawnSparkle } from './particles.js';
 
 // ── Shared constants ───────────────────────────────────────────
-const FRAME_W  = 2.2;   // width  (standing) / depth (flat)
-const FRAME_H  = 2.8;   // height (standing) / length (flat)
-const BORDER   = 0.16;  // frame border thickness
+const FRAME_W  = 3.2;   // width  (standing) / depth (flat)
+const FRAME_H  = 4.0;   // height (standing) / length (flat)
+const BORDER   = 0.2;   // frame border thickness
 
 // Each fallen frame gets a slightly higher y so later falls always
 // render on top of earlier falls — no z-fighting between stacked frames.
@@ -187,7 +187,14 @@ export class PhotoFrame {
 
     new THREE.TextureLoader().load(
       photoPath,
-      (tex) => { tex.colorSpace = THREE.SRGBColorSpace; mat.map = tex; mat.needsUpdate = true; },
+      (tex) => {
+        tex.colorSpace  = THREE.SRGBColorSpace;
+        tex.anisotropy  = PhotoFrame.maxAnisotropy || 8;
+        tex.minFilter   = THREE.LinearMipmapLinearFilter;
+        tex.magFilter   = THREE.LinearFilter;
+        mat.map = tex;
+        mat.needsUpdate = true;
+      },
       undefined,
       () => { /* keep fallback */ }
     );
@@ -197,6 +204,8 @@ export class PhotoFrame {
       mesh.rotation.x = -Math.PI / 2;
     }
     mesh.position.copy(offset);
+    mesh.userData.isPhotoPlane = true;
+    mesh.userData.photoPath    = photoPath;
     this.group.add(mesh);
   }
 

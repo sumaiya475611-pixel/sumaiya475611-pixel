@@ -80,15 +80,18 @@ function _handlePointer(clientX, clientY) {
     spawnSparkle(point.x, point.y, point.z);
     playSound('sparkle');
 
-    // Walk up to find userData (balloon meshes have userData.isBalloon)
+    // Walk up to find userData (balloon / gift / cake)
     let obj = hit.object;
     while (obj) {
       if (obj.userData.isBalloon) {
         _popBalloon(obj, point);
         return;
       }
+      if (obj.userData.isGift) {
+        _openGift(obj, point);
+        return;
+      }
       if (obj.userData.isCake) {
-        // Extra burst on cake click
         const cakeTop = getCakeTopPosition();
         triggerConfettiCannon(cakeTop.x, cakeTop.y, cakeTop.z);
         playSound('confetti');
@@ -105,33 +108,97 @@ function _handlePointer(clientX, clientY) {
   }
 }
 
-// ── Balloon pop ────────────────────────────────────────────────
+// ── Balloon pop — inflate then burst ──────────────────────────
 function _popBalloon(mesh, point) {
+  const group = mesh.parent;
+  if (!group || group.userData.popped) return;
+  group.userData.popped = true;
+
+  const origScale = group.userData.origScale || 1;
+
   playSound('pop');
+  // Burst of sparkles at pop point
   spawnSparkle(point.x, point.y, point.z);
+  spawnSparkle(point.x + 0.25, point.y + 0.25, point.z);
+  spawnSparkle(point.x - 0.25, point.y - 0.15, point.z + 0.1);
 
   if (_onBalloonPop) _onBalloonPop(mesh);
 
-  // Animate balloon shrinking then hide it, re-show after 3 s
-  const parent = mesh.parent || mesh;
   if (window.gsap) {
-    gsap.to(parent.scale, {
-      x: 0, y: 0, z: 0,
-      duration: 0.3,
-      ease: 'back.in(2)',
+    // Phase 1: quickly inflate to 1.6× original scale
+    gsap.to(group.scale, {
+      x: origScale * 1.6, y: origScale * 1.6, z: origScale * 1.6,
+      duration: 0.12,
+      ease: 'power1.out',
       onComplete: () => {
-        parent.visible = false;
-        // Respawn
-        setTimeout(() => {
-          parent.scale.set(1, 1, 1);
-          parent.visible = true;
-        }, 3000);
+        // Phase 2: snap to zero (pop!)
+        gsap.to(group.scale, {
+          x: 0, y: 0, z: 0,
+          duration: 0.1,
+          ease: 'power3.in',
+          onComplete: () => {
+            group.visible = false;
+            group.userData.popped = false;
+            // Respawn after 3 s
+            setTimeout(() => {
+              group.scale.setScalar(origScale);
+              group.visible = true;
+            }, 3000);
+          },
+        });
       },
     });
   } else {
-    parent.visible = false;
-    setTimeout(() => { parent.visible = true; }, 3000);
+    group.visible = false;
+    group.userData.popped = false;
+    setTimeout(() => { group.scale.setScalar(origScale); group.visible = true; }, 3000);
   }
+}
+
+// ── Gift box open — lid flies off + confetti shower ────────────
+function _openGift(giftGroup, point) {
+  if (giftGroup.userData.opened) return;
+  giftGroup.userData.opened = true;
+
+  const lid   = giftGroup.userData.lid;
+  const baseY = giftGroup.userData.baseY ?? giftGroup.position.y;
+  const s     = giftGroup.scale.x;
+
+  // Sound + sparkles
+  playSound('confetti');
+  spawnSparkle(point.x, point.y, point.z);
+  spawnSparkle(point.x, point.y + 0.4, point.z);
+
+  // Confetti cannon bursting out of the box top
+  triggerConfettiCannon(
+    giftGroup.position.x,
+    giftGroup.position.y + s,
+    giftGroup.position.z,
+  );
+
+  if (window.gsap) {
+    // Box jumps up slightly
+    gsap.to(giftGroup.position, {
+      y: baseY + 0.35,
+      duration: 0.12, ease: 'power2.out',
+      yoyo: true, repeat: 1,
+    });
+
+    if (lid) {
+      // Lid pops up…
+      gsap.to(lid.position, { y: 1.8,  duration: 0.28, ease: 'back.out(2)' });
+      gsap.to(lid.rotation, { x: 0.5, z: 0.6, duration: 0.28, ease: 'power2.out' });
+      // …then tumbles away
+      gsap.to(lid.position, { y: -4,  duration: 0.55, delay: 0.28, ease: 'power2.in' });
+      gsap.to(lid.rotation, { x: 2.0, z: 1.8, duration: 0.55, delay: 0.28, ease: 'power2.in' });
+    }
+  }
+
+  // Reset after 5 s so box can be opened again
+  setTimeout(() => {
+    giftGroup.userData.opened = false;
+    if (lid) { lid.position.set(0, 0.61, 0); lid.rotation.set(0, 0, 0); }
+  }, 5000);
 }
 
 // ── Wish popup ─────────────────────────────────────────────────

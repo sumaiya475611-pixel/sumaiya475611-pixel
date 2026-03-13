@@ -31,6 +31,7 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(THEME.bgColor, 1);
+PhotoFrame.maxAnisotropy = renderer.capabilities.getMaxAnisotropy();
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
 
@@ -517,7 +518,9 @@ Parts.createConfettiCannon(scene);
 
 // ── Car ────────────────────────────────────────────────────────
 const car = new Car(scene);
-car.setPosition(0, 0.3, 0);
+// Start just inside Year 1 gate, facing into the world (negative Z)
+car.setPosition(YEAR_ZONE_START_X, 0.3, YEAR_ZONE_Z_MIN + 2);
+car.group.rotation.y = 0;
 
 // ── Input ──────────────────────────────────────────────────────
 const inputs = { forward: false, backward: false, left: false, right: false };
@@ -526,8 +529,18 @@ const KEY_MAP = {
   ArrowUp: 'forward', ArrowDown: 'backward', ArrowLeft: 'left', ArrowRight: 'right',
   KeyW:    'forward', KeyS:      'backward', KeyA:      'left', KeyD:       'right',
 };
-document.addEventListener('keydown', e => { if (KEY_MAP[e.code]) { inputs[KEY_MAP[e.code]] = true;  e.preventDefault(); } });
-document.addEventListener('keyup',   e => { if (KEY_MAP[e.code]) { inputs[KEY_MAP[e.code]] = false; e.preventDefault(); } });
+document.addEventListener('keydown', e => {
+  if (_modalOpen) {
+    if (e.key === 'Escape')     { _closeModal(); e.preventDefault(); }
+    if (e.key === 'ArrowRight') { _modalNext();  e.preventDefault(); }
+    if (e.key === 'ArrowLeft')  { _modalPrev();  e.preventDefault(); }
+    return;
+  }
+  if (KEY_MAP[e.code]) { inputs[KEY_MAP[e.code]] = true;  e.preventDefault(); }
+});
+document.addEventListener('keyup', e => {
+  if (KEY_MAP[e.code]) { inputs[KEY_MAP[e.code]] = false; e.preventDefault(); }
+});
 
 function bindDpad(id, key) {
   const btn = document.getElementById(id);
@@ -543,6 +556,88 @@ bindDpad('dpad-up',    'forward');
 bindDpad('dpad-down',  'backward');
 bindDpad('dpad-left',  'left');
 bindDpad('dpad-right', 'right');
+
+// ── Photo modal ────────────────────────────────────────────────
+const _allPhotoPaths = [
+  ...GALLERY_PHOTOS,
+  ...GALLERY_BY_YEAR.flatMap(y => y.photos),
+];
+let _modalOpen  = false;
+let _modalIndex = 0;
+
+const _modalEl      = document.getElementById('photo-modal');
+const _modalImg     = document.getElementById('modal-img');
+const _modalCounter = document.getElementById('modal-counter');
+
+function _openModal(photoPath) {
+  const idx = _allPhotoPaths.indexOf(photoPath);
+  _modalIndex = idx >= 0 ? idx : 0;
+  _showModal();
+}
+
+function _showModal() {
+  if (!_modalEl || !_modalImg) return;
+  _modalImg.style.opacity = '0';
+  _modalImg.src = _allPhotoPaths[_modalIndex];
+  _modalImg.onload = () => { _modalImg.style.opacity = '1'; };
+  if (_modalCounter) _modalCounter.textContent = `📷 ${_modalIndex + 1} / ${_allPhotoPaths.length}`;
+  _modalEl.classList.add('visible');
+  _modalOpen = true;
+  Object.keys(inputs).forEach(k => { inputs[k] = false; });
+}
+
+function _closeModal() {
+  if (!_modalEl) return;
+  _modalEl.classList.remove('visible');
+  _modalOpen = false;
+}
+
+function _modalNext() {
+  _modalIndex = (_modalIndex + 1) % _allPhotoPaths.length;
+  _showModal();
+}
+
+function _modalPrev() {
+  _modalIndex = (_modalIndex - 1 + _allPhotoPaths.length) % _allPhotoPaths.length;
+  _showModal();
+}
+
+document.getElementById('modal-close')?.addEventListener('click', _closeModal);
+document.getElementById('modal-next')?.addEventListener('click', _modalNext);
+document.getElementById('modal-prev')?.addEventListener('click', _modalPrev);
+document.getElementById('modal-backdrop')?.addEventListener('click', _closeModal);
+
+// ── Click-to-view photo (raycaster) ───────────────────────────
+const _clickRay  = new THREE.Raycaster();
+const _clickMouse = new THREE.Vector2();
+let _pointerDownX = 0, _pointerDownY = 0;
+
+canvas.addEventListener('pointerdown', e => {
+  _pointerDownX = e.clientX;
+  _pointerDownY = e.clientY;
+});
+
+canvas.addEventListener('click', e => {
+  if (_modalOpen) return;
+  // Ignore if pointer dragged (driving gesture)
+  const dx = e.clientX - _pointerDownX;
+  const dy = e.clientY - _pointerDownY;
+  if (Math.sqrt(dx * dx + dy * dy) > 8) return;
+
+  _clickMouse.x =  (e.clientX / window.innerWidth)  * 2 - 1;
+  _clickMouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  _clickRay.setFromCamera(_clickMouse, camera);
+
+  const photoMeshes = [];
+  frames.forEach(f => f.group.traverse(c => {
+    if (c.userData.isPhotoPlane) photoMeshes.push(c);
+  }));
+
+  const hits = _clickRay.intersectObjects(photoMeshes, false);
+  if (hits.length > 0) {
+    _openModal(hits[0].object.userData.photoPath);
+  }
+});
 
 // ── Music ──────────────────────────────────────────────────────
 Audio.init();
@@ -568,7 +663,8 @@ document.getElementById('btn-play-again')?.addEventListener('click', () => {
       f.group.position.y = 0;
     }
   });
-  car.setPosition(0, 0.3, 0);
+  car.setPosition(YEAR_ZONE_START_X, 0.3, YEAR_ZONE_Z_MIN + 2);
+  car.group.rotation.y = 0;
   car.velocity = 0;
   visitedCount = 0;
 });
